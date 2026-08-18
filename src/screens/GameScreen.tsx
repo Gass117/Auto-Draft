@@ -11,6 +11,7 @@ import { CarRenderer } from '../components/CarRenderer';
 import { TutorialOverlay } from '../components/TutorialOverlay';
 import { simulateRace, SimulationResult } from '../utils/physics';
 import { useGameStore } from '../store/useGameStore';
+import { audioManager } from '../utils/audio';
 
 type GameNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Game'>;
 type GameRouteProp = RouteProp<RootStackParamList, 'Game'>;
@@ -45,31 +46,38 @@ export const GameScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleStartRace = () => {
     if (!isValidPath) return;
     
+    audioManager.playStart();
+
     // Run simulation
     const result = simulateRace(processedPath, car.stats, track);
     setSimResult(result);
     setGameState('RACING');
   };
 
-  const handleSimulationEnd = () => {
+  const handleSimulationEnd = async () => {
     setGameState('RESULTS');
     
     if (simResult?.success) {
+      await audioManager.playFinish();
       saveBestTime(track.id, simResult.totalTime);
       
-      // Unlock logic: simple linear unlocking based on track id for this MVP
+      // Unlock logic
       const currentTrackIndex = tracks.findIndex(t => t.id === track.id);
       if (currentTrackIndex < tracks.length - 1) {
         unlockTrack(tracks[currentTrackIndex + 1].id);
       }
+    } else {
+      // Record failed attempt
+      useGameStore.getState().recordFailedAttempt(track.id);
     }
   };
 
-  const resetDrawing = () => {
-    setIsValidPath(false);
-    setProcessedPath([]);
+  const handleClear = () => {
     setRawPath([]);
+    setProcessedPath([]);
+    setIsValidPath(false);
     setSimResult(null);
+    setGameState('PLANNING');
   };
 
   return (
@@ -88,7 +96,8 @@ export const GameScreen: React.FC<Props> = ({ navigation, route }) => {
       {simResult && (gameState === 'RACING' || gameState === 'RESULTS') && (
         <CarRenderer 
           frames={simResult.frames} 
-          carColor={car.color} 
+          carImage={car.image} 
+          maxSpeed={100 + car.stats.speed * 40}
           isPlaying={gameState === 'RACING'} 
           onSimulationEnd={handleSimulationEnd}
           dimensions={dimensions}
@@ -108,7 +117,7 @@ export const GameScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
             
             <View style={styles.bottomBar}>
-              <TouchableOpacity style={styles.btn} onPress={resetDrawing}>
+              <TouchableOpacity style={styles.btn} onPress={handleClear}>
                 <Text style={styles.btnText}>Clear</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btn} onPress={() => navigation.goBack()}>

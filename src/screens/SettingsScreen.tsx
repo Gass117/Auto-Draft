@@ -8,7 +8,15 @@ import { t } from '../utils/i18n';
 type SettingsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 
 export const SettingsScreen: React.FC<{ navigation: SettingsScreenNavigationProp }> = ({ navigation }) => {
-  const { language, setLanguage } = useGameStore();
+  const { language, setLanguage, audioVolumes, setAudioVolume } = useGameStore();
+
+  const handleVolumeChange = (type: 'general' | 'car', change: number) => {
+    const current = audioVolumes[type];
+    let newVal = current + change;
+    if (newVal < 0) newVal = 0;
+    if (newVal > 1) newVal = 1;
+    setAudioVolume(type, parseFloat(newVal.toFixed(1)));
+  };
 
   return (
     <View style={styles.container}>
@@ -28,6 +36,30 @@ export const SettingsScreen: React.FC<{ navigation: SettingsScreenNavigationProp
             onPress={() => setLanguage('it')}
           >
             <Text style={styles.btnText}>Italiano</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.settingRow}>
+        <Text style={styles.settingLabel}>BGM Volume: {Math.round(audioVolumes.general * 100)}%</Text>
+        <View style={styles.langButtons}>
+          <TouchableOpacity style={styles.langBtn} onPress={() => handleVolumeChange('general', -0.1)}>
+            <Text style={styles.btnText}>-</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.langBtn} onPress={() => handleVolumeChange('general', 0.1)}>
+            <Text style={styles.btnText}>+</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.settingRow}>
+        <Text style={styles.settingLabel}>Car Volume: {Math.round(audioVolumes.car * 100)}%</Text>
+        <View style={styles.langButtons}>
+          <TouchableOpacity style={styles.langBtn} onPress={() => handleVolumeChange('car', -0.1)}>
+            <Text style={styles.btnText}>-</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.langBtn} onPress={() => handleVolumeChange('car', 0.1)}>
+            <Text style={styles.btnText}>+</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -18,9 +18,9 @@ export const TrackSelectScreen: React.FC<Props> = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Select Track</Text>
       
-      <ScrollView horizontal contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {tracks.map((track) => {
-          const isUnlocked = unlockedTracks.includes(track.id);
+          const isUnlocked = unlockedTracks.includes(track.id) || ['track-1', 'track-2', 'track-3'].includes(track.id);
           const bestTime = bestTimes[track.id];
 
           return (
@@ -28,10 +28,10 @@ export const TrackSelectScreen: React.FC<Props> = ({ navigation }) => {
               key={track.id}
               style={[styles.card, !isUnlocked && styles.cardLocked]}
               disabled={!isUnlocked}
-              onPress={() => navigation.navigate('CarSelect', { trackId: track.id })}
+              onPress={() => navigation.navigate('PreRace', { trackId: track.id })}
             >
-              <Text style={styles.cardTitle}>{track.name}</Text>
-              <Text style={styles.cardDiff}>Difficulty: {track.difficulty}/3</Text>
+              <Text style={styles.cardTitle} numberOfLines={1} adjustsFontSizeToFit>{track.name}</Text>
+              <Text style={styles.cardDiff}>Livello: {tracks.findIndex(t => t.id === track.id) + 1}/{tracks.length}</Text>
               
               {!isUnlocked && (
                 <Text style={styles.lockedText}>LOCKED</Text>
@@ -65,16 +65,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   scrollContent: {
-    alignItems: 'center',
-    paddingRight: 40,
+    alignItems: 'stretch',
+    paddingBottom: 80,
   },
   card: {
-    width: 250,
-    height: 180,
+    width: '100%',
+    minHeight: 120,
     backgroundColor: '#2a2a2a',
     borderRadius: 15,
     padding: 20,
-    marginRight: 20,
+    marginBottom: 20,
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#4a4a4a',
